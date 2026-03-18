@@ -49,7 +49,7 @@ def align_image_phase_correlation(img1, img2):
     return aligned_img2, (shift_x, shift_y)
 
 """
-# Alternative Correlation Methods (Commented out as requested)
+# Alternative Correlation Methods
 
 def align_image_spatial_correlation(img1, img2):
     """
@@ -109,7 +109,7 @@ def align_image_fourier_correlation(img1, img2):
     
     return aligned_img2, (shift_x, shift_y)
     
-    def align_image_ncc(img1, img2):
+def align_image_ncc(img1, img2):
     """
     # 4. Correlació Creuada Normalitzada (NCC) utilitzant OpenCV.
     # Afegeix padding a la imatge base per permetre trobar desplaçaments.
@@ -135,8 +135,7 @@ def align_image_fourier_correlation(img1, img2):
     
     return aligned_img2, (shift_x, shift_y)
 """
-
-def autocrop_borders(img, crop_margin=0.10):
+def autocrop_borders(img, crop_margin=0.20):
     """
     Elimina les vores detectant els costats de les imatges
     """
@@ -160,8 +159,8 @@ def autocrop_borders(img, crop_margin=0.10):
     right_cut = w - hw + np.argmax(col_edge_sums[-hw:])
 
     # Apliquem un marge de seguretat per amagar desperfectes de les bandes de color degut a l'alineament
-    margin_y = int(h * 0.015)
-    margin_x = int(w * 0.015)
+    margin_y = int(h * 0.05)
+    margin_x = int(w * 0.05)
     
     top = min(top_cut + margin_y, h // 3)
     bottom = max(bottom_cut - margin_y, 2 * h // 3)
@@ -171,14 +170,14 @@ def autocrop_borders(img, crop_margin=0.10):
     return img[top:bottom, left:right]
 
 def process_image(filename):
-    print(f"Processing {filename}...")
+    print(f"Processant {filename}...")
     
     # 1. Llegim la imatge en esacla de grisos
     img_path = os.path.join(r"c:\Users\llucf\Downloads\img_lab2", filename)
     img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
     
     if img is None:
-        print(f"Error: Could not read image {filename}")
+        print(f"Error")
         return
         
     # Comencem un temporitzador
@@ -201,14 +200,9 @@ def process_image(filename):
     r_cropped = r[crop_h:-crop_h, crop_w:-crop_w]
 
     # 3. Alineem G,R i B
-    print("Aligning Green channel...")
     g_aligned_cropped, shift_g = align_image_phase_correlation(b_cropped, g_cropped)
     
-    print("Aligning Red channel...")
     r_aligned_cropped, shift_r = align_image_phase_correlation(b_cropped, r_cropped)
-    
-    print(f"Shift G (x,y): {shift_g}")
-    print(f"Shift R (x,y): {shift_r}")
 
     # Apliquem els desplaçaments als canal originals (sense retall)
     M_g = np.float32([[1, 0, shift_g[0]], [0, 1, shift_g[1]]])
@@ -221,7 +215,6 @@ def process_image(filename):
     color_img = cv2.merge([b, g_aligned, r_aligned])
 
     # Retallem les vores
-    print("Cropping borders...")
     color_img = autocrop_borders(color_img)
 
     # Acabem el temporitzador
@@ -234,8 +227,7 @@ def process_image(filename):
     output_path = os.path.join(r"c:\Users\llucf\Downloads\img_lab2", output_filename)
     
     cv2.imwrite(output_path, color_img)
-    print(f"Saved aligned image to {output_filename}\n")
-    
+
 
     display_img = cv2.resize(color_img, (0,0), fx=0.3, fy=0.3)
     cv2.imshow(f"Aligned {filename}", display_img)
@@ -249,3 +241,4 @@ if __name__ == "__main__":
     
     for f in files:
         process_image(f)
+
